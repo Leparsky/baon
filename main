@@ -8,7 +8,7 @@ from selenium.webdriver.common.proxy import Proxy, ProxyType
 
 from openpyxl import Workbook
 
-BASE_URL = 'https://ajento.ru'     #адрес сайта для парсинга
+BASE_URL = 'https://baon.ru'     #адрес сайта для парсинга
 
 
 
@@ -80,15 +80,25 @@ def main():
     #driver = proxy_driver(ALL_PROXIES)
     co = webdriver.ChromeOptions()
     co.add_argument("log-level=3")
-    co.add_argument("--headless")
+    #co.add_argument("--headless")
     driver = webdriver.Chrome(chrome_options=co)
-    driver.get("BASE_URL")
-    driver.maximize_window()
-    element=driver.find_element_by_xpath("//div[@class='form-group'][1]/div[@class='col-sm-7']/input[@class='form-control ng-pristine ng-empty ng-invalid ng-invalid-required ng-touched']")
-    element.send_keys("test")
+    driver.get(BASE_URL)
+    #driver.maximize_window()
+    #element = driver.find_element_by_xpath("//li[@class='cabinet']")
+
+    jscode = '''
+    var list = document.getElementsByClassName('float-cabinet ng-scope ng-hide');
+    for (index = 0; index < list.length; ++index) {
+    list[index].setAttribute('class','float-cabinet ng-scope'); }
+    '''
+    retval = driver.execute_script(jscode);
+
+
+    element=driver.find_element_by_xpath("//input[@placeholder='email']")
+    element.send_keys("lde@mail.ru")
     element = driver.find_element_by_xpath(
-        "//div[@class='form-group'][2]/div[@class='col-sm-7']/input[@class='form-control ng-pristine ng-empty ng-invalid ng-invalid-required ng-touched']']")
-    element.send_keys("8520")
+        "//input[@type='password']")
+    element.send_keys("Surfrider3")
 
     element = driver.find_element_by_xpath(
         "//a[@class='golden-button enter-button only-border']")
