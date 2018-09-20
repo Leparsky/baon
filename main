@@ -1,7 +1,10 @@
 #https://habr.com/post/322608/
 #https://habr.com/post/250921/
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common import action_chains
 import selenium.common.exceptions
+import time
 running = True
 from selenium.webdriver.chrome.options import DesiredCapabilities
 from selenium.webdriver.common.proxy import Proxy, ProxyType
@@ -82,7 +85,7 @@ def main():
     co.add_argument("log-level=3")
     #co.add_argument("--headless")
     driver = webdriver.Chrome(chrome_options=co)
-    driver.get(BASE_URL)
+    driver.get(BASE_URL+"/dealer/")
     #driver.maximize_window()
     #element = driver.find_element_by_xpath("//li[@class='cabinet']")
 
@@ -91,41 +94,85 @@ def main():
     for (index = 0; index < list.length; ++index) {
     list[index].setAttribute('class','float-cabinet ng-scope'); }
     '''
-    retval = driver.execute_script(jscode);
+    #retval = driver.execute_script(jscode);
 
 
-    element=driver.find_element_by_xpath("//input[@placeholder='email']")
-    element.send_keys("lde@mail.ru")
+    #element=driver.find_element_by_xpath("//input[@placeholder='email']")
+    #element.send_keys("lde@mail.ru")
+    #element = driver.find_element_by_xpath(
+    #    "//form[@class='form-inline ng-pristine ng-invalid ng-invalid-required']/input[@class='form-control ng-pristine ng-empty ng-invalid ng-invalid-required ng-touched']"
+     #   )
+    #"//input[@type='password']"
+    #element.send_keys("test")
+
+    #element = driver.find_element_by_xpath(
+    #    "//input[@class='form-control ng-pristine ng-untouched ng-empty ng-invalid ng-invalid-required'][1]")
+
+    element = driver.find_element_by_xpath("//div[@class='header-navigation']/a")
+    element.send_keys(Keys.TAB)
+    action = action_chains.ActionChains(driver)
+    action.send_keys("test")
+    action.send_keys(Keys.TAB)
+    action.send_keys("8520")
+    action.perform()
+    time.sleep(1)
     element = driver.find_element_by_xpath(
-        "//input[@type='password']")
-    element.send_keys("Surfrider3")
-
-    element = driver.find_element_by_xpath(
-        "//a[@class='golden-button enter-button only-border']")
+        "//a[@class='red-button small-button']")
     element.click()
+    time.sleep(20)
+    element = driver.find_element_by_xpath("//div[@class='close-button']")
+    element.click()
+    element = driver.find_element_by_xpath("//div[@class='cw-wrapper clearfix']/div[1]/a")
+    element.click()
+    #выбираем коллекцию
+    element = driver.find_element_by_xpath("//div[@class='second-line']/select[@class='form-control'][1]")
+    element.click()
+    element.send_keys(Keys.DOWN)
+    element.click()
+    #   Муж. Жен.  Уни.  Дет.
+    element = driver.find_element_by_xpath("//div[@class='second-line']/select[@class='form-control'][2]")
+    element.click()
+    element.send_keys(Keys.UP)
+    element.send_keys(Keys.UP)
+    element.send_keys(Keys.UP)
+    element.send_keys(Keys.UP)
+    element.click()
+    for number in range(4):
+        element = driver.find_element_by_xpath("//div[@class='second-line']/select[@class='form-control'][2]")
+        element.click()
+        element.send_keys(Keys.DOWN)
+        element.click()
+        #клац по кнопке
+        element = driver.find_element_by_xpath("//form[@class='ng-pristine ng-valid']/div[@class='third-line']/a[@class='golden-button']")
+        element.click()
+        time.sleep(20)
+        for element in driver.find_elements_by_xpath("//div[@class='model-item']"):
+             if not "предзаказа" in element.text:
+                element1=element.find_element_by_xpath("//p[@class='articul']")
 
+    action.move_by_offset(200,-300)
+    action.click().perform()
     lstCatPages = []
     # страницы каталога
-    get_page(BASE_URL,driver)
+    #get_page(BASE_URL,driver)
 
-    for element in driver.find_elements_by_xpath("//a[@class='cs-sub-menu__link']"):
+    for element in driver.find_elements_by_xpath("//li[@class='main-menu']/a"):
         lstCatPages.append(element.get_attribute("href")) if element.get_attribute("href") not in lstCatPages else None
         # добавляем в список вложеные подменю проверяем задвоение
-    for element in driver.find_elements_by_xpath("//a[@class='cs-menu__link']"):
-        lstCatPages.append(element.get_attribute("href")) if element.get_attribute("href") not in lstCatPages else None
-        # добавляем в список верхние меню, проверяем задвоение
     print("количество страниц каталога :" +str(len(lstCatPages)))
 
 
     lstGoodPages = []
     # страницы каталога товаров
-
+    #lstGoodPages.append('https://baon.ru/catalog/tsb-tso-009663/kurtka-dlya-devochki-BJ038003/SNAKEWEEDPRINTED/')
+    #lstGoodPages.append('https://baon.ru/catalog/tsb-tso-008920/bazovaya-kurtka-s-logotipom-B538201/SLOE/')
+    #lstGoodPages.append('https://baon.ru/catalog/tsb-tso-009792/kurtka-dlya-mal-chika-BK538001/MOSS/')
     for page in lstCatPages:
-        get_page(page, driver)
-        for element in driver.find_elements_by_xpath("//a[@class='cs-goods-title']"):
+        driver.get(page)
+        for element in driver.find_elements_by_xpath("//div[@class='model-container']/span/a"):
             lstGoodPages.append(element.get_attribute("href")) if element.get_attribute("href") not in lstGoodPages else None
             #добавляем в список товаров ссылку,если такой ссылки нет, проверяем задвоение
-        for element in driver.find_elements_by_xpath("//a[@class=' b-pager__link ']"):
+        for element in driver.find_elements_by_xpath("//div[@class='paginator']/span/a"):
             lstCatPages.append(element.get_attribute("href")) if element.get_attribute("href") not in lstCatPages else None
             # добавляем в список пейджеры, проверяем задвоение
         print("количество страниц каталога :" + str(len(lstCatPages)))
@@ -133,17 +180,8 @@ def main():
 
 
     #lstGoodPages.append("https://ajento.ru/p336841792-ajento-muzhskoj-bomber.html")
-    url   = ""#url
-    cost  = ""# Цена
-    size  = ""# Размер
-    art   = ""# Артикул
-    color = ""# Цвет
-    edizm = ""# Единица    измерения
-    descr = ""# // Описание
-    album = ""# // Альбом
-    position = ""# Позиция
-    picture = ""# // Ссылка на картинку
-    name = ""# Название
+
+
     wb = Workbook()
     ws = wb.active
     pagesproxycount = 30
@@ -170,24 +208,41 @@ def main():
 
     i=1
     for page in lstGoodPages:
-        get_page(page, driver)
-        i+=1
+        url = ""  # url
+        cost = ""  # Цена
+        size = ""  # Размер
+        art = ""  # Артикул
+        color = ""  # Цвет
+        edizm = ""  # Единица    измерения
+        descr = ""  # // Описание
+        album = ""  # // Альбом
+        position = ""  # Позиция
+        picture = ""  # // Ссылка на картинку
+        name = ""  # Название
+
         print(page)
+
+        driver.get(page)
+        i+=1
+
         url = page
 
-        element = driver.find_element_by_xpath("//p[@class='b-product-cost__price']")
-        cost=(element.text)
-
-        for element in driver.find_elements_by_xpath("//li[ @class='b-custom-drop-down__list-item']"):
-            size+=element.get_attribute("innerHTML")+','
-
-        element = driver.find_element_by_xpath("//h1[@class='cs-title cs-title_type_product cs-online-edit']/span")
+        element = driver.find_element_by_xpath("//div[@class='center-col']/h1")
         name = (element.text)
 
-        element = driver.find_element_by_xpath("//li[@class='b-product-data__item b-product-data__item_type_sku']/span")
+        element = driver.find_element_by_xpath("//td[1]/span[@class='main-price']")
+        cost=(element.text)
+
+        for element in driver.find_elements_by_xpath("//div[@class='size']/div/div"):
+            size+=element.text\
+                  +','
+
+
+
+        element = driver.find_element_by_xpath("//p[@class='articul']")
         art = (element.text)
         try:
-            element = driver.find_element_by_xpath("//li[@class='b-product-data__item b-product-data__item_type_available']")
+            element = driver.find_element_by_xpath("//div[@class='description-block']/div")
             descr = (element.text)+' , '
         except selenium.common.exceptions.NoSuchElementException:
             None
@@ -197,8 +252,8 @@ def main():
         except selenium.common.exceptions.NoSuchElementException:
                 None
         try:
-            element = driver.find_element_by_xpath("//p[@class='b-product-cost__min-order']")
-            descr += (element.text)
+            for element in driver.find_elements_by_xpath("//div[@class='model-link-navigation']/a")[2:]:
+                album += (element.text)+'->'
         except selenium.common.exceptions.NoSuchElementException:
             None
         try:
@@ -217,7 +272,7 @@ def main():
         ws.cell(column=1+13,row=i, value=i - 1)
         ws.cell(column=1+17,row=i, value=picture)
         ws.cell(column=1+18,row=i, value=url)
-    wb.save(filename="c:\\tmp\\example.xlsx")
+    wb.save(filename="c:\\tmp\\baon.xlsx")
 
 
 main()
