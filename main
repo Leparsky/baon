@@ -85,6 +85,7 @@ def main():
     co.add_argument("log-level=3")
     #co.add_argument("--headless")
     driver = webdriver.Chrome(chrome_options=co)
+    driver.maximize_window()
     driver.get(BASE_URL+"/dealer/")
 
     wb = Workbook()
