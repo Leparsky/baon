@@ -182,60 +182,67 @@ def main():
                 continue
             time.sleep(20)
             for element in driver.find_elements_by_xpath("//div[@class='model-item']"):
-                 lstSize = []
-                 dColorSize = {}
-                 dColorImage = {}
-                 i = 0
-                 #оределяем цвета и размеры
-                 for elSizeColor in element.find_elements_by_xpath(".//table/tbody/tr"):
-                     lstPos = []
-                     for elSize in elSizeColor.find_elements_by_xpath(".//td"):
-                         lstPos.append(elSize.text)
-                     if i==0:
-                         lstSize=lstPos
-                         i+=1
-                     else:
-                         strSize=""
-                         for n in range(2, len(lstPos)):
-                             if lstPos[n]!= '-':
-                                 strSize += lstSize[n-1]+","
-                         predzakaz=""
-                         if not "предзаказа" in element.text:
-                             if strSize != "":
-                                 dColorSize[lstPos[1].strip()] = strSize[:-1]
-                         else:
-                             predzakaz = "предзаказ"
-                             try:
+                lstSize = []
+                dColorSize = {}
+                dColorImage = {}
+                i = 0
+                #оределяем цвета и размеры
+                for elSizeColor in element.find_elements_by_xpath(".//table/tbody/tr"):
+                    lstPos = []
+                    for elSize in elSizeColor.find_elements_by_xpath(".//td"):
+                        lstPos.append(elSize.text)
+                    if i==0:
+                        lstSize=lstPos
+                        i+=1
+                    else:
+                        strSize=""
+                        for n in range(2, len(lstPos)):
+                            if lstPos[n]!= '-':
+                                strSize += lstSize[n-1]+","
+                        predzakaz=""
+                        pg=""
+                        if not "предзаказа" in element.text:
+                            if strSize != "":
+                                dColorSize[lstPos[1].strip()] = strSize[:-1]
+                        else:
+                            predzakaz = "предзаказ"
+                            try:
                                 dColorSize[lstPos[1].strip()] = ','.join(lstSize[1:])
-                             except:
-                                 None
-                 try:
-                     art = element.find_element_by_xpath(".//p[@class='articul']").text  # Артикул
-                     print(album)
-                     print(art)
-                     cost = element.find_element_by_xpath(".//div[@class='price']").text[:-4]  # Цена
-                     element.find_element_by_xpath(".//a[@class='dotted-underline-grey']").click()
-                     time.sleep(2)
-                     descr = driver.find_element_by_xpath("//div[@class='description block']").text # // Описание
-                     descr += driver.find_element_by_xpath("//div[@class='material block']").text  # // Описание
-                     name = driver.find_element_by_xpath(".//div[@class='model-rightcol']/h1").text  # Название
-                     for elColor in driver.find_elements_by_xpath("//table[@class='color']/tbody/tr"):
-                         elColor.find_element_by_xpath(".//div[@class='coloritem']").click()
-                         time.sleep(2)
-                         try:
+                            except:
+                                None
+                try:
+                    art = element.find_element_by_xpath(".//p[@class='articul']").text  # Артикул
+                    print(album)
+                    print(art)
+                    cost = element.find_element_by_xpath(".//div[@class='price']").text[:-4]  # Цена
+                    element.find_element_by_xpath(".//a[@class='dotted-underline-grey']").click()
+                    time.sleep(2)
+                    descr = driver.find_element_by_xpath("//div[@class='description block']").text # // Описание
+                    descr += driver.find_element_by_xpath("//div[@class='material block']").text  # // Описание
+                    name = driver.find_element_by_xpath(".//div[@class='model-rightcol']/h1").text  # Название
+                    for elColor in driver.find_elements_by_xpath("//table[@class='color']/tbody/tr"):
+                        elColor.find_element_by_xpath(".//div[@class='coloritem']").click()
+                        time.sleep(2)
+                        try:
                             #picture = driver.find_element_by_xpath("//img[@class='main-img']").get_attribute("src")
                             picture = driver.find_element_by_xpath("//div[@style='display: block;']/img[@class='main-img']").get_attribute("src")
-                         except selenium.common.exceptions.NoSuchElementException:
-                             picture = ""
-                         # // Ссылка на картинку
-                         dColorImage[elColor.text] = picture
-                     elColor.find_element_by_xpath("//span[@class='ui-button-text']").click()
-                     print("SUCCESS")
-                 except :
-                        print("FAIL :(((((((")
-                 for colorKey in dColorSize.keys():
+                        except selenium.common.exceptions.NoSuchElementException:
+                            try:
+                                picture = driver.find_element_by_xpath("//img[@class='main-img']").get_attribute("src")
+                                pg="картинка не того цвета"
+                            except:
+                                picture = ""
+                                print("FAIL :(((((((")
+                        # // Ссылка на картинку
+                        dColorImage[elColor.text] = picture
+                        elColor.find_element_by_xpath("//span[@class='ui-button-text']").click()
+                        print("SUCCESS")
+                except :
+                    None
+                for colorKey in dColorSize.keys():
                     rowCount += 1
                     ws.cell(column=1 + 1, row=rowCount, value=name)
+                    ws.cell(column=1 + 3, row=rowCount, value=pg)
                     ws.cell(column=1 + 3, row=rowCount, value=predzakaz)
                     ws.cell(column=1 + 4, row=rowCount, value=cost)
                     ws.cell(column=1 + 6, row=rowCount, value=dColorSize[colorKey])
@@ -245,9 +252,12 @@ def main():
                     ws.cell(column=1 + 10, row=rowCount, value=descr)
                     ws.cell(column=1 + 12, row=rowCount, value=album)
                     ws.cell(column=1 + 13, row=rowCount, value=rowCount - 1)
-                    ws.cell(column=1 + 17, row=rowCount, value=dColorImage[colorKey])
+                    try:
+                        ws.cell(column=1 + 17, row=rowCount, value=dColorImage[colorKey])
+                    except:
+                        None
                     # ws.cell(column=1 + 18, row=rowCount, value=url)
-    wb.save(filename="c:\\tmp\\{}baon.xlsx".format(time.time()))
+                    wb.save(filename="c:\\tmp\\{}baon.xlsx".format(time.time()))
 
 
 main()
