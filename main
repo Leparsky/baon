@@ -16,70 +16,6 @@ from openpyxl import Workbook
 BASE_URL = 'https://baon.ru'     #адрес сайта для парсинга
 
 
-
-
-#https://gist.github.com/tushortz/cba8b25f9d80f584f807b65890f37be5
-def get_proxies():
-    co = webdriver.ChromeOptions()
-    co.add_argument("log-level=3")
-    co.add_argument("--headless")
-    driver = webdriver.Chrome(chrome_options=co)
-    driver.get("https://free-proxy-list.net/")
-
-    PROXIES = []
-    proxies = driver.find_elements_by_css_selector("tr[role='row']")
-    for p in proxies:
-        result = p.text.split(" ")
-
-        if result[-1] == "yes":
-            PROXIES.append(result[0]+":"+result[1])
-
-    driver.close()
-    return PROXIES
-
-
-
-
-
-def proxy_driver(PROXIES):
-    co = webdriver.ChromeOptions()
-    co.add_argument("log-level=3")
-    #co.add_argument("--headless")
-    prox = Proxy()
-
-    if PROXIES:
-        pxy = PROXIES[-1]
-    else:
-        print("--- Proxies used up (%s)" % len(PROXIES))
-        PROXIES = get_proxies()
-
-    prox.proxy_type = ProxyType.MANUAL
-    prox.http_proxy = pxy
-    prox.socks_proxy = pxy
-    prox.ssl_proxy = pxy
-
-    capabilities = webdriver.DesiredCapabilities.CHROME
-    prox.add_to_capabilities(capabilities)
-
-    driver = webdriver.Chrome(chrome_options=co, desired_capabilities=capabilities)
-
-    return driver
-def get_page(url,driver):
-    running = True
-    while running:
-        try:
-            driver.get(url)
-
-            assert "Телефоны"  in driver.page_source
-            running = False
-            #running = True
-        except:
-            new = ALL_PROXIES.pop()
-            # reassign driver if fail to switch proxy
-            driver = proxy_driver(ALL_PROXIES)
-            print("--- Switched proxy to: %s" % new)
-            time.sleep(1)
-
 def main():
     #ALL_PROXIES = get_proxies()
     #driver = proxy_driver(ALL_PROXIES)
@@ -95,23 +31,23 @@ def main():
     pagesproxycount = 30
     ws.cell(column=1 + 0, row=1, value="ID")
     ws.cell(column=1 + 1, row=1, value="Название")
-    ws.cell(column=1 + 2, row=1, value="Оригинальное")
-    ws.cell(column=1 + 3, row=1, value="название")
-    ws.cell(column=1 + 4, row=1, value="Цена")
-    ws.cell(column=1 + 5, row=1, value="Количество")
-    ws.cell(column=1 + 6, row=1, value="Размер")
-    ws.cell(column=1 + 7, row=1, value="Артикул")
-    ws.cell(column=1 + 8, row=1, value="Цвет")
-    ws.cell(column=1 + 9, row=1, value="Единица измерения")
-    ws.cell(column=1 + 10, row=1, value="Описание")
-    ws.cell(column=1 + 11, row=1, value="Фотография")
-    ws.cell(column=1 + 12, row=1, value="Альбом")
-    ws.cell(column=1 + 13, row=1, value="Позиция")
-    ws.cell(column=1 + 14, row=1, value="Отображать комментарий")
-    ws.cell(column=1 + 15, row=1, value="Отображать в каталоге")
-    ws.cell(column=1 + 16, row=1, value="Включить ряды")
-    ws.cell(column=1 + 17, row=1, value="Ссылка на источник")
-    ws.cell(column=1 + 18, row=1, value="Обновить фото")
+    ws.cell(column=1 + 2, row=1, value="Оригинальное название")
+
+    ws.cell(column=1 + 3, row=1, value="Цена")
+    ws.cell(column=1 + 4, row=1, value="Количество")
+    ws.cell(column=1 + 5, row=1, value="Размер")
+    ws.cell(column=1 + 6, row=1, value="Артикул")
+    ws.cell(column=1 + 7, row=1, value="Цвет")
+    ws.cell(column=1 + 8, row=1, value="Единица измерения")
+    ws.cell(column=1 + 9, row=1, value="Описание")
+    ws.cell(column=1 + 10, row=1, value="Фотография")
+    ws.cell(column=1 + 11, row=1, value="Альбом")
+    ws.cell(column=1 + 12, row=1, value="Позиция")
+    ws.cell(column=1 + 13, row=1, value="Отображать комментарий")
+    ws.cell(column=1 + 14, row=1, value="Отображать в каталоге")
+    ws.cell(column=1 + 15, row=1, value="Включить ряды")
+    ws.cell(column=1 + 16, row=1, value="Ссылка на источник")
+    ws.cell(column=1 + 17, row=1, value="Обновить фото")
 
     element = driver.find_element_by_xpath("//div[@class='header-navigation']/a")
     element.send_keys(Keys.TAB)
@@ -166,6 +102,7 @@ def main():
 
         #element.click()
         for number in range(4):
+            fn = "c:\\tmp\\{}baon.xlsx".format(time.time())
             time.sleep(1)
             element = driver.find_element_by_xpath("//div[@class='second-line']/select[@class='form-control'][2]")
             #element.click()
@@ -185,79 +122,98 @@ def main():
                 lstSize = []
                 dColorSize = {}
                 dColorImage = {}
+                predzakaz = ""
+                FirstPicture=""
+
+                #pg = ""
                 i = 0
                 #оределяем цвета и размеры
-                for elSizeColor in element.find_elements_by_xpath(".//table/tbody/tr"):
-                    lstPos = []
-                    for elSize in elSizeColor.find_elements_by_xpath(".//td"):
-                        lstPos.append(elSize.text)
-                    if i==0:
-                        lstSize=lstPos
-                        i+=1
-                    else:
-                        strSize=""
-                        for n in range(2, len(lstPos)):
-                            if lstPos[n]!= '-':
-                                strSize += lstSize[n-1]+","
-                        predzakaz=""
-                        pg=""
-                        if not "предзаказа" in element.text:
-                            if strSize != "":
-                                dColorSize[lstPos[1].strip()] = strSize[:-1]
-                        else:
-                            predzakaz = "предзаказ"
-                            try:
-                                dColorSize[lstPos[1].strip()] = ','.join(lstSize[1:])
-                            except:
-                                None
                 try:
-                    art = element.find_element_by_xpath(".//p[@class='articul']").text  # Артикул
-                    print(album)
-                    print(art)
-                    cost = element.find_element_by_xpath(".//div[@class='price']").text[:-4]  # Цена
-                    element.find_element_by_xpath(".//a[@class='dotted-underline-grey']").click()
-                    time.sleep(2)
-                    descr = driver.find_element_by_xpath("//div[@class='description block']").text # // Описание
-                    descr += driver.find_element_by_xpath("//div[@class='material block']").text  # // Описание
-                    name = driver.find_element_by_xpath(".//div[@class='model-rightcol']/h1").text  # Название
-                    for elColor in driver.find_elements_by_xpath("//table[@class='color']/tbody/tr"):
-                        elColor.find_element_by_xpath(".//div[@class='coloritem']").click()
-                        time.sleep(2)
-                        try:
-                            #picture = driver.find_element_by_xpath("//img[@class='main-img']").get_attribute("src")
-                            picture = driver.find_element_by_xpath("//div[@style='display: block;']/img[@class='main-img']").get_attribute("src")
-                        except selenium.common.exceptions.NoSuchElementException:
-                            try:
-                                picture = driver.find_element_by_xpath("//img[@class='main-img']").get_attribute("src")
-                                pg="картинка не того цвета"
-                            except:
-                                picture = ""
-                                print("FAIL :(((((((")
-                        # // Ссылка на картинку
-                        dColorImage[elColor.text] = picture
-                        elColor.find_element_by_xpath("//span[@class='ui-button-text']").click()
-                        print("SUCCESS")
-                except :
-                    None
-                for colorKey in dColorSize.keys():
-                    rowCount += 1
-                    ws.cell(column=1 + 1, row=rowCount, value=name)
-                    ws.cell(column=1 + 3, row=rowCount, value=pg)
-                    ws.cell(column=1 + 3, row=rowCount, value=predzakaz)
-                    ws.cell(column=1 + 4, row=rowCount, value=cost)
-                    ws.cell(column=1 + 6, row=rowCount, value=dColorSize[colorKey])
-                    ws.cell(column=1 + 7, row=rowCount, value=art + "-" + colorKey)
-                    ws.cell(column=1 + 8, row=rowCount, value=colorKey)
-                    # ws.cell(column=1 + 9, row=rowCount, value=edizm)
-                    ws.cell(column=1 + 10, row=rowCount, value=descr)
-                    ws.cell(column=1 + 12, row=rowCount, value=album)
-                    ws.cell(column=1 + 13, row=rowCount, value=rowCount - 1)
+                    for elSizeColor in element.find_elements_by_xpath(".//table/tbody/tr"):
+                        lstPos = []
+                        for elSize in elSizeColor.find_elements_by_xpath(".//td"):
+                            lstPos.append(elSize.text)
+                        if i==0:
+                            lstSize=lstPos
+                            i+=1
+                        else:
+                            strSize=""
+                            for n in range(2, len(lstPos)):
+                                if lstPos[n]!= '-':
+                                    strSize += lstSize[n-1]+","
+
+                            if not "предзаказа" in element.text:
+                                if strSize != "":
+                                    dColorSize[lstPos[1].strip()] = strSize[:-1]
+                            else:
+                                predzakaz = "предзаказ"
+                                try:
+                                    dColorSize[lstPos[1].strip()] = ','.join(lstSize[1:])
+                                except:
+                                    None
+
                     try:
-                        ws.cell(column=1 + 17, row=rowCount, value=dColorImage[colorKey])
-                    except:
+                        art = element.find_element_by_xpath(".//p[@class='articul']").text  # Артикул
+                        print(album)
+                        print(art)
+                        cost = element.find_element_by_xpath(".//div[@class='price']").text[:-4]  # Цена
+                        element.find_element_by_xpath(".//a[@class='dotted-underline-grey']").click()
+                        time.sleep(2)
+                        #dlg=driver.find_element_by_xpath("//div[@class='dealer-model-detail ui-dialog-content ui-widget-content']")
+                        descr = driver.find_element_by_xpath("//div[@class='description block']").text # // Описание
+                        descr += driver.find_element_by_xpath("//div[@class='material block']").text  # // Описание
+                        name = driver.find_element_by_xpath(".//div[@class='model-rightcol']/h1").text  # Название
+
+                        for elColor in driver.find_elements_by_xpath("//table[@class='color']/tbody/tr"):
+                            elColor.find_element_by_xpath(".//div[@class='coloritem']").click()
+
+                            time.sleep(2)
+                            try:
+                                clr = elColor.find_element_by_xpath(".//div[@class='coloritem']").get_attribute("color")
+                                picture = driver.find_element_by_xpath(
+                                    "//div[@class='{} color-image-block']/img[@class='main-img']".format(
+                                        clr)).get_attribute(
+                                    "src")
+                                if not FirstPicture:
+                                    FirstPicture=picture
+                            except selenium.common.exceptions.NoSuchElementException:
+                                   #pg="картинка не того цвета"
+                                   picture=""
+                                   print("FAIL :(((((((")
+                            # // Ссылка на картинку
+                            dColorImage[elColor.text] = picture
+                        elColor.find_element_by_xpath(".//span[@class='ui-button-text']").click()
+                        print("SUCCESS")
+                    except :
                         None
-                    # ws.cell(column=1 + 18, row=rowCount, value=url)
-                    wb.save(filename="c:\\tmp\\{}baon.xlsx".format(time.time()))
+                    for colorKey in dColorSize.keys():
+                        rowCount += 1
+                        ws.cell(column=1 + 2, row=rowCount, value=name)
+                        ws.cell(column=1 + 0, row=rowCount, value=predzakaz)
+                        ws.cell(column=1 + 3, row=rowCount, value=cost)
+                        ws.cell(column=1 + 5, row=rowCount, value=dColorSize[colorKey])
+                        ws.cell(column=1 + 6, row=rowCount, value=art + "-" + colorKey)
+                        ws.cell(column=1 + 7, row=rowCount, value=colorKey)
+                        # ws.cell(column=1 + 8, row=rowCount, value=edizm)
+                        ws.cell(column=1 + 9, row=rowCount, value=descr)
+                        ws.cell(column=1 + 11, row=rowCount, value=album)
+                        ws.cell(column=1 + 12, row=rowCount, value=rowCount - 1)
+                        ws.cell(column=1 + 13, row=rowCount, value="ИСТИНА")
+                        ws.cell(column=1 + 14, row=rowCount, value="ИСТИНА")
+                        ws.cell(column=1 + 15, row=rowCount, value="ЛОЖЬ")
+
+                        try:
+                            if dColorImage[colorKey]:
+                                ws.cell(column=1 + 16, row=rowCount, value=dColorImage[colorKey])
+                            else:
+                                ws.cell(column=1 + 16, row=rowCount, value=FirstPicture)
+                                ws.cell(column=1 + 9, row=rowCount, value="Картинка этой же можели другого цвета" + descr)
+                        except:
+                            None
+                        # ws.cell(column=1 + 18, row=rowCount, value=url)
+                        wb.save(filename=fn)
+                except:
+                     None
 
 
 main()
