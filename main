@@ -53,6 +53,7 @@ def main():
     element.send_keys(Keys.TAB)
     action = action_chains.ActionChains(driver)
     action.send_keys("test")
+
     action.send_keys(Keys.TAB)
     action.send_keys("8520")
     action.perform()
@@ -117,7 +118,7 @@ def main():
             except:
                 print("Пропуск {}".format(album))
                 continue
-            time.sleep(20)
+            time.sleep(10)
             for element in driver.find_elements_by_xpath("//div[@class='model-item']"):
                 lstSize = []
                 dColorSize = {}
